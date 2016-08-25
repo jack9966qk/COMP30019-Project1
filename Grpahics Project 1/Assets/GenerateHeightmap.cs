@@ -33,39 +33,50 @@ public class GenerateHeightmap : MonoBehaviour {
 
 	}
 
-	void assignValue (float[,] map, bool[,] assigned, int x, int y, float value) {
-		if (!assigned [x, y]) {
-			map [x, y] = value;
-			assigned [x, y] = true;
+
+
+	void assignValue(float[,] map, bool[,] assigned, int x, int y, float value)
+	{
+		if (!assigned[x, y]) {
+			map[x, y] = value;
+			assigned[x, y] = true;
+		}
+	}
+
+	float getValue(float[,] map, bool[,] assigned, int x, int y, int maxWidth, int maxHeight, float alternative) {
+		if (x < 0 || x >= maxWidth || y < 0 || y >= maxHeight || !assigned[x,y]) {
+			return alternative;
+		} else {
+			return map[x, y];
 		}
 	}
 
 	// performs the diamond and square step on a map (x to x+width-1, y to y+width-1)
-	void performDiamondSquare(float [,] map, bool [,] assigned, int x, int y, int width, int height, float ranMagnitude, int maxWidth, int maxHeight) {
+	void performDiamondSquare(float[,] map, bool[,] assigned, int x, int y, int width, int height, float ranMagnitude, int maxWidth, int maxHeight) {
 
 		int w = width - 1;
 		int h = height - 1;
 		float bl, br, tl, tr;
-		bl = map [x, y];
-		br = map [x + w, y];
-		tl = map [x, y + h];
-		tr = map [x + w, y + h];
+		bl = map[x, y];
+		br = map[x + w, y];
+		tl = map[x, y + h];
+		tr = map[x + w, y + h];
 
 		// diamond
-		float centre = ((bl + tr + tl + tr) / 4) + Random.value * ranMagnitude;
-		assignValue (map, assigned, x + w / 2, y + h / 2, centre);
+		float centre = ((bl + tr + tl + tr) / 4) + (Random.value - 0.5f) * ranMagnitude;
+		assignValue(map, assigned, x + w / 2, y + h / 2, centre);
 
 
 		// square
-		float left = x - w / 2 >= 0 ? map [x - w / 2, y + h / 2] : centre;
-		float right = x + (w / 2) * 3 < maxWidth ? map [x + (w / 2) * 3, y + h / 2] : centre;
-		float up = y + (h / 2) * 3 < maxHeight ? map [x + w / 2, y + (h / 2) * 3] : centre;
-		float down = y - h / 2 >= 0 ? map [x + w / 2, y - h / 2] : centre;
+		float left = getValue(map, assigned, x - w / 2, y + h / 2, maxWidth, maxHeight, centre);
+		float right = getValue(map, assigned, x + (w / 2) * 3, y + h / 2, maxWidth, maxHeight, centre);
+		float up = getValue(map, assigned, x + w / 2, y + (h / 2) * 3, maxWidth, maxHeight, centre);
+		float down = getValue(map, assigned, x + w / 2, y - h / 2, maxWidth, maxHeight, centre);
 
-		assignValue (map, assigned, x, y + h / 2, ((bl + tl + centre + left) / 4) + Random.value * ranMagnitude);
-		assignValue (map, assigned, x + w / 2, y, ((bl + br + centre + down) / 4) + Random.value * ranMagnitude);
-		assignValue (map, assigned, x + w / 2, y + h, ((tl + tr + centre + up) / 4) + Random.value * ranMagnitude);
-		assignValue (map, assigned, x + w, y + h/2, ((br + tr + centre + right) / 4) + Random.value * ranMagnitude);
+		assignValue(map, assigned, x, y + h / 2, ((bl + tl + centre + left) / 4) + (Random.value - 0.5f) * ranMagnitude);
+		assignValue(map, assigned, x + w / 2, y, ((bl + br + centre + down) / 4) + (Random.value - 0.5f) * ranMagnitude);
+		assignValue(map, assigned, x + w / 2, y + h, ((tl + tr + centre + up) / 4) + (Random.value - 0.5f) * ranMagnitude);
+		assignValue(map, assigned, x + w, y + h / 2, ((br + tr + centre + right) / 4) + (Random.value - 0.5f) * ranMagnitude);
 
 	}
 
