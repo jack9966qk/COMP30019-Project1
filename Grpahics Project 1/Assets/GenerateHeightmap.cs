@@ -28,12 +28,6 @@ public class GenerateHeightmap : MonoBehaviour {
 		terrainData.SetHeights (0, 0, heightMap);
 	}
 
-	// Update is called once per frame
-	void Update () {
-
-	}
-
-
 	float? getValue(float?[,] assigned, int x, int y, int maxWidth, int maxHeight, float alternative) {
 		if (x < 0 || x >= maxWidth || y < 0 || y >= maxHeight) {
 			return alternative;
@@ -64,14 +58,10 @@ public class GenerateHeightmap : MonoBehaviour {
 		float? up = getValue(assigned, x + w / 2, y + (h / 2) * 3, maxWidth, maxHeight, centre);
 		float? down = getValue(assigned, x + w / 2, y - h / 2, maxWidth, maxHeight, centre);
 
-		if (left != null)
-			assigned[x, y + h / 2] = ((bl + tl + centre + left) / 4) + (Random.value - 0.5f) * ranMagnitude;
-		if (down != null)
-			assigned[x + w / 2, y] = ((bl + br + centre + down) / 4) + (Random.value - 0.5f) * ranMagnitude;
-		if (up != null)
-			assigned[x + w / 2, y + h] = ((tl + tr + centre + up) / 4) + (Random.value - 0.5f) * ranMagnitude;
-		if (right != null)
-			assigned[x + w, y + h / 2] = ((br + tr + centre + right) / 4) + (Random.value - 0.5f) * ranMagnitude;
+		assigned[x, y + h / 2] = ((bl + tl + centre + left ?? centre) / 4) + (Random.value - 0.5f) * ranMagnitude;
+		assigned[x + w / 2, y] = ((bl + br + centre + down ?? centre) / 4) + (Random.value - 0.5f) * ranMagnitude;
+		assigned[x + w / 2, y + h] = ((tl + tr + centre + up ?? centre) / 4) + (Random.value - 0.5f) * ranMagnitude;
+		assigned[x + w, y + h / 2] = ((br + tr + centre + right ?? centre) / 4) + (Random.value - 0.5f) * ranMagnitude;
 
 	}
 
