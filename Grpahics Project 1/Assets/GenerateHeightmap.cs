@@ -10,6 +10,11 @@ public class GenerateHeightmap : MonoBehaviour {
 
 	public float randomMagnitude = 0.2f;
 
+//	public Texture2D t1;
+//	public Texture2D t2;
+//	public Texture2D t3;
+
+
 	private TerrainData terrainData;
 
 	// Use this for initialization
@@ -26,6 +31,17 @@ public class GenerateHeightmap : MonoBehaviour {
 		generateHeightmap (heightMap, width, height, randomMagnitude);
 
 		terrainData.SetHeights (0, 0, heightMap);
+
+//		SplatPrototype[] prototypes = new SplatPrototype[3];
+//
+//		prototypes [0] = new SplatPrototype ();
+//		prototypes [1] = new SplatPrototype ();
+//		prototypes [2] = new SplatPrototype ();
+//		(prototypes [0]).texture = t1;
+//		(prototypes [1]).texture = t2;
+//		(prototypes [2]).texture = t3;
+//
+//		terrainData.splatPrototypes = prototypes;
 	}
 
 	float? getValue(float?[,] assigned, int x, int y, int maxWidth, int maxHeight, float alternative) {
@@ -113,6 +129,10 @@ public class GenerateHeightmap : MonoBehaviour {
 
 	}
 
+
+	void applyTextures() {
+		
+	}
 
 
 }
