@@ -1,8 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class GenerateHeightmap : MonoBehaviour {
 
+	public int length = 65;
+	public int height = 200;
+	public Vector3 centre = new Vector3(0,0,0);
 	public float bottomLeftInit = 0.4f;
 	public float bottomRightInit = 0.6f;
 	public float topLeftInit = 0.3f;
@@ -10,38 +14,20 @@ public class GenerateHeightmap : MonoBehaviour {
 
 	public float randomMagnitude = 0.2f;
 
-//	public Texture2D t1;
-//	public Texture2D t2;
-//	public Texture2D t3;
 
-
-	private TerrainData terrainData;
+	public Color high = new Color (20, 20, 20);
+	public Color med = new Color (0, 5, 0);
+	public Color low = new Color (5, 5, 5);
 
 	// Use this for initialization
 	void Start () {
-		terrainData = this.GetComponent<Terrain>().terrainData;
-		int width = terrainData.heightmapWidth;
-		int height = terrainData.heightmapHeight;
-
-		float[,] heightMap = new float[width, height];
+		this.transform.position = centre;
+		float[,] heightMap = new float[length, length];
+		generateHeightmap (heightMap, length, length, randomMagnitude);
 
 
-
-
-		generateHeightmap (heightMap, width, height, randomMagnitude);
-
-		terrainData.SetHeights (0, 0, heightMap);
-
-//		SplatPrototype[] prototypes = new SplatPrototype[3];
-//
-//		prototypes [0] = new SplatPrototype ();
-//		prototypes [1] = new SplatPrototype ();
-//		prototypes [2] = new SplatPrototype ();
-//		(prototypes [0]).texture = t1;
-//		(prototypes [1]).texture = t2;
-//		(prototypes [2]).texture = t3;
-//
-//		terrainData.splatPrototypes = prototypes;
+		MeshFilter filter = this.gameObject.AddComponent<MeshFilter> ();
+		filter.mesh = this.CeateMesh (heightMap, length, centre);
 	}
 
 	float? getValue(float?[,] assigned, int x, int y, int maxWidth, int maxHeight, float alternative) {
@@ -130,8 +116,77 @@ public class GenerateHeightmap : MonoBehaviour {
 	}
 
 
-	void applyTextures() {
-		
+	Color colorOfHeight(float y, int height) {
+		float factor = (y - centre.y) / height;
+		if (factor > 0.5) {
+			return high;
+		} else if (factor > 0.3) {
+			return med;
+		} else {
+			return low;
+		}
+	}
+
+	Mesh CeateMesh(float[,] heightmap, int length, Vector3 centre) {
+		Mesh m = new Mesh ();
+		m.name = "Ground";
+
+		int half = (length + 1) / 2;
+		float cx = centre.x;
+		float cy = centre.y;
+		float cz = centre.z;
+
+		List<Vector3> vertices = new List<Vector3>();
+		List<Color> colors = new List<Color> ();
+		List<Vector3> normals = new List<Vector3> ();
+
+
+
+		for (int i = 0; i < length - 1; i++) {
+			for (int j = 0; j < length-1; j++) {
+				Vector3 topLeft = new Vector3 (cx + i - half, cy + height * heightmap [i, j], cz + j - half);
+				Vector3 topRight = new Vector3 (cx + i + 1 - half, cy + height * heightmap [i + 1, j], cz + j - half);
+				Vector3 bottomLeft = new Vector3 (cx + i - half, cy + height * heightmap [i, j + 1], cz + j + 1 - half);
+				Vector3 bottomRight = new Vector3 (cx + i+1 - half, cy + height * heightmap [i+1, j + 1], cz + j + 1 - half);
+
+				Vector3 normal1 = Vector3.Cross (topRight - bottomLeft, topLeft - topRight);
+				Vector3 normal2 = Vector3.Cross (bottomRight - bottomLeft, topRight - bottomRight);
+
+				vertices.Add (bottomLeft);
+				vertices.Add (topRight);
+				vertices.Add (topLeft);
+				vertices.Add (bottomLeft);
+				vertices.Add (bottomRight);
+				vertices.Add (topRight);
+
+				colors.Add (colorOfHeight(bottomLeft.y, height));
+				colors.Add (colorOfHeight(topRight.y, height));
+				colors.Add (colorOfHeight(topLeft.y, height));
+				colors.Add (colorOfHeight(bottomLeft.y, height));
+				colors.Add (colorOfHeight(bottomRight.y, height));
+				colors.Add (colorOfHeight(topRight.y, height));
+
+				normals.Add (normal1);
+				normals.Add (normal1);
+				normals.Add (normal1);
+				normals.Add (normal2);
+				normals.Add (normal2);
+				normals.Add (normal2);
+			}
+		}
+
+
+		m.vertices = vertices.ToArray ();
+		m.colors = colors.ToArray ();
+		m.normals = normals.ToArray();
+		int[] triangles = new int[m.vertices.Length];
+		for (int i = 0; i < m.vertices.Length; i++)
+			triangles[i] = i;
+
+		m.triangles = triangles;
+
+
+		return m;
 	}
 
 

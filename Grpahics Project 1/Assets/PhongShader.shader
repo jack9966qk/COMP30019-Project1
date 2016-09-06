@@ -37,16 +37,13 @@ Shader "Unlit/PhongShader"
 		Pass
 		{
 			CGPROGRAM
-// Upgrade NOTE: excluded shader from DX11, Xbox360, OpenGL ES 2.0 because it uses unsized arrays
-//#pragma exclude_renderers d3d11 xbox360 gles
 			#pragma vertex vert
 			#pragma fragment frag
 
 			#include "UnityCG.cginc"
 
-			uniform int _NumPointLights;
-			uniform float3 _PointLightPositions[10];
-			uniform float3 _PointLightColors[10];
+			uniform float3 _PointLightColor;
+			uniform float3 _PointLightPosition;
 
 			struct vertIn
 			{
@@ -94,45 +91,33 @@ Shader "Unlit/PhongShader"
 				float3 interpNormal = normalize(v.worldNormal);
 
 				// Calculate ambient RGB intensities
-				float Ka = 1;
+				float Ka = 1.0;
 				float3 amb = v.color.rgb * UNITY_LIGHTMODEL_AMBIENT.rgb * Ka;
 
+				// Calculate diffuse RBG reflections, we save the results of L.N because we will use it again
+				// (when calculating the reflected ray in our specular component)
+				float fAtt = 1;
+				float Kd = 0.5;
+				float3 L = normalize(_PointLightPosition - v.worldVertex.xyz);
+				float LdotN = dot(L, interpNormal);
+				float3 dif = fAtt * _PointLightColor.rgb * Kd * v.color.rgb * saturate(LdotN);
 
+				// Calculate specular reflections
+				float Ks = 0.1;
+				float specN = 5; // Values>>1 give tighter highlights
+				float3 V = normalize(_WorldSpaceCameraPos - v.worldVertex.xyz);
+				// Using classic reflection calculation:
+				//float3 R = normalize((2.0 * LdotN * interpNormal) - L);
+				//float3 spe = fAtt * _PointLightColor.rgb * Ks * pow(saturate(dot(V, R)), specN);
+				// Using Blinn-Phong approximation:
+				specN = 25; // We usually need a higher specular power when using Blinn-Phong
+				float3 H = normalize(V + L);
+				float3 spe = fAtt * _PointLightColor.rgb * Ks * pow(saturate(dot(interpNormal, H)), specN);
 
+				// Combine Phong illumination model components
 				float4 returnColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
-				returnColor.rgb += amb;
-
-
-				int i = 0;
-				for (i = 0; i < 5; i++) {
-					float3 PointLightPosition = _PointLightPositions[i];
-					float3 PointLightColor = _PointLightColors[i];
-					// Calculate diffuse RBG reflections, we save the results of L.N because we will use it again
-					// (when calculating the reflected ray in our specular component)
-					float fAtt = 1;
-					float Kd = 1;
-					float3 L = normalize(PointLightPosition - v.worldVertex.xyz);
-					float LdotN = dot(L, interpNormal);
-					float3 dif = fAtt * PointLightColor.rgb * Kd * v.color.rgb * saturate(LdotN);
-
-					// Calculate specular reflections
-					float Ks = 1;
-					float specN = 5; // Values>>1 give tighter highlights
-					float3 V = normalize(_WorldSpaceCameraPos - v.worldVertex.xyz);
-					// Using classic reflection calculation:
-					//float3 R = normalize((2.0 * LdotN * interpNormal) - L);
-					//float3 spe = fAtt * _PointLightColor.rgb * Ks * pow(saturate(dot(V, R)), specN);
-					// Using Blinn-Phong approximation:
-					specN = 25; // We usually need a higher specular power when using Blinn-Phong
-					float3 H = normalize(V + L);
-					float3 spe = fAtt * PointLightColor.rgb * Ks * pow(saturate(dot(interpNormal, H)), specN);
-
-					// Combine Phong illumination model components
-					returnColor.rgb += dif.rgb + spe.rgb;
-					returnColor.a += v.color.a;
-				}
-
-
+				returnColor.rgb = amb.rgb + dif.rgb + spe.rgb;
+				returnColor.a = v.color.a;
 
 				return returnColor;
 			}
