@@ -4,9 +4,12 @@ using System.Collections.Generic;
 
 public class GenerateHeightmap : MonoBehaviour {
 
+	public GameObject camera;
+	public GameObject waterPlane;
 	public int length = 65;
 	public int height = 200;
 	public Vector3 centre = new Vector3(0,0,0);
+	public float scale = 4.0f;
 	public float bottomLeftInit = 0.4f;
 	public float bottomRightInit = 0.6f;
 	public float topLeftInit = 0.3f;
@@ -28,6 +31,9 @@ public class GenerateHeightmap : MonoBehaviour {
 
 		MeshFilter filter = this.gameObject.AddComponent<MeshFilter> ();
 		filter.mesh = this.CeateMesh (heightMap, length, centre);
+		this.gameObject.AddComponent<MeshCollider> ();
+		setWaterPosition (filter.mesh);
+		setCameraPosition (filter.mesh);
 	}
 
 	float? getValue(float?[,] assigned, int x, int y, int maxWidth, int maxHeight, float alternative) {
@@ -144,10 +150,10 @@ public class GenerateHeightmap : MonoBehaviour {
 
 		for (int i = 0; i < length - 1; i++) {
 			for (int j = 0; j < length-1; j++) {
-				Vector3 topLeft = new Vector3 (cx + i - half, cy + height * heightmap [i, j], cz + j - half);
-				Vector3 topRight = new Vector3 (cx + i + 1 - half, cy + height * heightmap [i + 1, j], cz + j - half);
-				Vector3 bottomLeft = new Vector3 (cx + i - half, cy + height * heightmap [i, j + 1], cz + j + 1 - half);
-				Vector3 bottomRight = new Vector3 (cx + i+1 - half, cy + height * heightmap [i+1, j + 1], cz + j + 1 - half);
+				Vector3 topLeft = new Vector3 (cx + (i - half) * scale, cy + height * heightmap [i, j], cz + (j - half) * scale);
+				Vector3 topRight = new Vector3 (cx + (i + 1 - half) * scale, cy + height * heightmap [i + 1, j], cz + (j - half) * scale);
+				Vector3 bottomLeft = new Vector3 (cx + (i - half) * scale, cy + height * heightmap [i, j + 1], cz + (j + 1 - half) * scale);
+				Vector3 bottomRight = new Vector3 (cx + (i+1 - half) * scale, cy + height * heightmap [i+1, j + 1], cz + (j + 1 - half) * scale);
 
 				Vector3 normal1 = Vector3.Cross (topRight - bottomLeft, topLeft - topRight);
 				Vector3 normal2 = Vector3.Cross (bottomRight - bottomLeft, topRight - bottomRight);
@@ -187,6 +193,90 @@ public class GenerateHeightmap : MonoBehaviour {
 
 
 		return m;
+	}
+		
+	void getHeightBound(Mesh m, out float min, out float max) {
+		Vector3[] vertices = m.vertices;
+		float minHeight = vertices [0].y;
+		float maxHeight = vertices [0].y;
+		foreach (Vector3 vertex in vertices) {
+			if (vertex.y < minHeight) {
+				minHeight = vertex.y;
+			} else if (vertex.y > maxHeight) {
+				maxHeight = vertex.y;
+			}
+		}
+
+		min = minHeight;
+		max = maxHeight;
+	}
+
+	void getXZBound(Mesh m, out float xmin, out float xmax, out float zmin, out float zmax) {
+		Vector3[] vertices = m.vertices;
+		float minX = vertices [0].x;
+		float maxX = vertices [0].x;
+		float minZ = vertices [0].z;
+		float maxZ = vertices [0].z;
+		foreach (Vector3 vertex in vertices) {
+			if (vertex.x < minX) {
+				minX = vertex.x;
+			} else if (vertex.x > maxX) {
+				maxX = vertex.x;
+			}
+
+			if (vertex.z < minZ) {
+				minZ = vertex.z;
+			} else if (vertex.z > maxZ) {
+				maxZ = vertex.z;
+			}
+
+		}
+
+		xmin = minX;
+		xmax = maxX;
+		zmin = minZ;
+		zmax = maxZ;
+	}
+
+	void setWaterPosition(Mesh m) {
+		float ymin, ymax;
+		getHeightBound (m, out ymin, out ymax);
+		float height = ymin + (ymax - ymin) / 3;
+
+		float xmin, xmax, zmin, zmax;
+		getXZBound (m, out xmin, out xmax, out zmin, out zmax);
+		waterPlane.GetComponent<WaterScript> ().GenerateMesh (
+			new Vector3 (xmin, 0, zmin),
+			new Vector3 (xmax, 0, zmin),
+			new Vector3 (xmin, 0, zmax),
+			new Vector3 (xmax, 0, zmax));
+		waterPlane.gameObject.transform.position = new Vector3 (centre.x, height, centre.z);
+	}
+
+	void setCameraPosition(Mesh m) {
+		float ymin, ymax;
+		getHeightBound (m, out ymin, out ymax);
+		float mid = (ymin + ymax) / 2;
+		float oneThird = ymin + (ymax - ymin) / 3;
+		Vector3[] vertices = m.vertices;
+		Vector3 chosen = vertices[0];
+		float lastHeight = Mathf.Abs(chosen.y - oneThird);
+		float lastDist = Mathf.Pow(chosen.x, 2) + Mathf.Pow(chosen.z, 2) ;
+
+		foreach (Vector3 vertex in vertices) {
+			float h = Mathf.Abs (vertex.y - oneThird);
+			float dist = Mathf.Pow(vertex.x, 2)  + Mathf.Pow(vertex.z, 2) ;
+			if (h < lastHeight && dist < lastDist) {
+				chosen = vertex;
+				lastHeight = h;
+				lastDist = dist;
+			}
+		}
+		
+		camera.transform.position = new Vector3(chosen.x, chosen.y + 20f, chosen.z);
+		Vector3 lookto = new Vector3 (centre.x, height, centre.z);
+//		camera.transform.rotation = Quaternion.LookRotation (lookto-camera.transform.position, Vector3.up);
+		camera.transform.rotation = Quaternion.Euler(0f,0f,0f);
 	}
 
 

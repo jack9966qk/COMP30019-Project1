@@ -25,7 +25,7 @@
 // Adapted further by Chris Ewin, 23 Sep 2013
 // Adapted further (again) by Alex Zable (port to Unity), 19 Aug 2016
 
-Shader "Unlit/PhongShader"
+Shader "Unlit/WaterShader"
 {
 	Properties
 	{
@@ -34,10 +34,6 @@ Shader "Unlit/PhongShader"
 	}
 	SubShader
 	{
-
-		Tags {"Queue"="Transparent" "IgnoreProjector"="True" "RenderType"="Transparent"}
-		Blend SrcAlpha OneMinusSrcAlpha
-
 		Pass
 		{
 			CGPROGRAM
@@ -49,9 +45,6 @@ Shader "Unlit/PhongShader"
 			uniform float3 _PointLightColor;
 			uniform float3 _PointLightPosition;
 			uniform float _Alpha;
-			uniform float _Ambient;
-			uniform float _Diffuse;
-			uniform float _Specular;
 
 			struct vertIn
 			{
@@ -98,19 +91,19 @@ Shader "Unlit/PhongShader"
 				float3 interpNormal = normalize(v.worldNormal);
 
 				// Calculate ambient RGB intensities
-				float Ka = _Ambient;
+				float Ka = 1.0;
 				float3 amb = v.color.rgb * UNITY_LIGHTMODEL_AMBIENT.rgb * Ka;
 
 				// Calculate diffuse RBG reflections, we save the results of L.N because we will use it again
 				// (when calculating the reflected ray in our specular component)
 				float fAtt = 1;
-				float Kd = _Diffuse;
+				float Kd = 0.5;
 				float3 L = normalize(_PointLightPosition - v.worldVertex.xyz);
 				float LdotN = dot(L, interpNormal);
 				float3 dif = fAtt * _PointLightColor.rgb * Kd * v.color.rgb * saturate(LdotN);
 
 				// Calculate specular reflections
-				float Ks = _Specular;
+				float Ks = 0.1;
 				float specN = 5; // Values>>1 give tighter highlights
 				float3 V = normalize(_WorldSpaceCameraPos - v.worldVertex.xyz);
 				// Using classic reflection calculation:
@@ -124,7 +117,8 @@ Shader "Unlit/PhongShader"
 				// Combine Phong illumination model components
 				float4 returnColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
 				returnColor.rgb = amb.rgb + dif.rgb + spe.rgb;
-				returnColor.a = v.color.a * _Alpha;
+				returnColor.a = v.color.a;
+
 				return returnColor;
 			}
 			ENDCG
