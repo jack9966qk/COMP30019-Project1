@@ -25,7 +25,7 @@
 // Adapted further by Chris Ewin, 23 Sep 2013
 // Adapted further (again) by Alex Zable (port to Unity), 19 Aug 2016
 
-Shader "Unlit/PhongShader"
+Shader "Unlit/PhongShaderTransparent"
 {
 	Properties
 	{
@@ -34,6 +34,9 @@ Shader "Unlit/PhongShader"
 	}
 	SubShader
 	{
+
+		Tags {"Queue"="Transparent" "IgnoreProjector"="True" "RenderType"="Transparent"}
+		Blend SrcAlpha OneMinusSrcAlpha
 
 		Pass
 		{
