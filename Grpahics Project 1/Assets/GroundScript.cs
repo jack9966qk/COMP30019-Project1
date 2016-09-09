@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class GenerateHeightmap : MonoBehaviour {
+public class GroundScript : MonoBehaviour {
 
 	public GameObject camera;
 	public GameObject waterPlane;
@@ -16,6 +16,12 @@ public class GenerateHeightmap : MonoBehaviour {
 	public float topRightInit = 0.5f;
 
 	public float randomMagnitude = 0.2f;
+
+	public GameObject frontWall;
+	public GameObject backWall;
+	public GameObject leftWall;
+	public GameObject rightWall;
+	public GameObject topWall;
 
 
 	public Color high = new Color (20, 20, 20);
@@ -34,6 +40,7 @@ public class GenerateHeightmap : MonoBehaviour {
 		this.gameObject.AddComponent<MeshCollider> ();
 		setWaterPosition (filter.mesh);
 		setCameraPosition (filter.mesh);
+		setWallPositions (filter.mesh);
 	}
 
 	float? getValue(float?[,] assigned, int x, int y, int maxWidth, int maxHeight, float alternative) {
@@ -256,7 +263,6 @@ public class GenerateHeightmap : MonoBehaviour {
 	void setCameraPosition(Mesh m) {
 		float ymin, ymax;
 		getHeightBound (m, out ymin, out ymax);
-		float mid = (ymin + ymax) / 2;
 		float oneThird = ymin + (ymax - ymin) / 3;
 		Vector3[] vertices = m.vertices;
 		Vector3 chosen = vertices[0];
@@ -273,11 +279,26 @@ public class GenerateHeightmap : MonoBehaviour {
 			}
 		}
 		
-		camera.transform.position = new Vector3(chosen.x, chosen.y + 20f, chosen.z);
-		Vector3 lookto = new Vector3 (centre.x, height, centre.z);
+		camera.transform.position = new Vector3(chosen.x, chosen.y + 40f, chosen.z);
+		//Vector3 lookto = new Vector3 (centre.x, height, centre.z);
 //		camera.transform.rotation = Quaternion.LookRotation (lookto-camera.transform.position, Vector3.up);
-		camera.transform.rotation = Quaternion.Euler(0f,0f,0f);
+		camera.transform.rotation = Quaternion.Euler(Vector3.zero);
 	}
 
+
+	void setWallPositions(Mesh m) {
+		float ymin, ymax;
+		getHeightBound (m, out ymin, out ymax);
+
+		float xmin, xmax, zmin, zmax;
+		getXZBound (m, out xmin, out xmax, out zmin, out zmax);
+
+		this.backWall.transform.position = new Vector3 (centre.x, centre.y, zmin);
+		this.frontWall.transform.position = new Vector3 (centre.x, centre.y, zmax);
+		this.leftWall.transform.position = new Vector3 (xmax, centre.y, centre.z);
+		this.rightWall.transform.position = new Vector3 (xmin, centre.y, centre.z);
+		this.topWall.transform.position = new Vector3 (centre.x, ymax + 200f, centre.z);
+
+	}
 
 }

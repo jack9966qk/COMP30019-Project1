@@ -11,7 +11,6 @@ public class CameraMovement : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-	
 	}
 	
 	// Update is called once per frame
@@ -65,7 +64,13 @@ public class CameraMovement : MonoBehaviour {
 		}
 
 		charController.Move (moveDirection * Time.deltaTime);
-		transform.rotation *= Quaternion.Euler (yRotate, xRotate, zRotate);
+		Vector3 rotation = transform.rotation.eulerAngles;
+		transform.rotation = Quaternion.Euler (rotation.x + yRotate, rotation.y + xRotate, rotation.z + zRotate);
+//		transform.eulerAngles = new Vector3 (rotation.x + yRotate, rotation.y + xRotate, rotation.z + zRotate);
+//		transform.rotation *= Quaternion.AngleAxis (xRotate, Vector3.up);
+//		transform.rotation *= Quaternion.AngleAxis (zRotate, Vector3.forward);
+//		transform.rotation *= Quaternion.AngleAxis (yRotate, Vector3.right);
+		//transform.rotation *= Quaternion.Euler (yRotate, xRotate, zRotate);
 	
 	}
 }
