@@ -42,9 +42,9 @@ public class GroundScript : MonoBehaviour {
 	}
 
 	// helper function to deal with out-of-bound issue
-	float? getValue(float?[,] assigned, int x, int y, int maxWidth, int maxHeight, float alternative) {
+	float? getValue(float?[,] assigned, int x, int y, int maxWidth, int maxHeight) {
 		if (x < 0 || x >= maxWidth || y < 0 || y >= maxHeight) {
-			return alternative;
+			return null;
 		} else {
 			return assigned [x, y];
 		}
@@ -66,15 +66,34 @@ public class GroundScript : MonoBehaviour {
 
 
 		// square
-		float? left = getValue(assigned, x - l / 2, y + l / 2, maxLength, maxLength, centre);
-		float? right = getValue(assigned, x + (l / 2) * 3, y + l / 2, maxLength, maxLength, centre);
-		float? up = getValue(assigned, x + l / 2, y + (l / 2) * 3, maxLength, maxLength, centre);
-		float? down = getValue(assigned, x + l / 2, y - l / 2, maxLength, maxLength, centre);
+		float? left = getValue(assigned, x - l / 2, y + l / 2, maxLength, maxLength);
+		float? right = getValue(assigned, x + (l / 2) * 3, y + l / 2, maxLength, maxLength);
+		float? up = getValue(assigned, x + l / 2, y + (l / 2) * 3, maxLength, maxLength);
+		float? down = getValue(assigned, x + l / 2, y - l / 2, maxLength, maxLength);
 
-		assigned[x, y + l / 2] = ((bl + tl + centre + left ?? centre) / 4) + (Random.value - 0.5f) * ranMagnitude;
-		assigned[x + l / 2, y] = ((bl + br + centre + down ?? centre) / 4) + (Random.value - 0.5f) * ranMagnitude;
-		assigned[x + l / 2, y + l] = ((tl + tr + centre + up ?? centre) / 4) + (Random.value - 0.5f) * ranMagnitude;
-		assigned[x + l, y + l / 2] = ((br + tr + centre + right ?? centre) / 4) + (Random.value - 0.5f) * ranMagnitude;
+		if (left == null) {
+			assigned[x, y + l / 2] = ((bl + tl + centre) / 3) + (Random.value - 0.5f) * ranMagnitude;
+		} else {
+			assigned[x, y + l / 2] = ((bl + tl + centre + left) / 4) + (Random.value - 0.5f) * ranMagnitude;
+		}
+
+		if (down == null) {
+			assigned[x + l / 2, y] = ((bl + br + centre) / 3) + (Random.value - 0.5f) * ranMagnitude;
+		} else {
+			assigned[x + l / 2, y] = ((bl + br + centre + down) / 4) + (Random.value - 0.5f) * ranMagnitude;
+		}
+
+		if (up == null) {
+			assigned[x + l / 2, y + l] = ((tl + tr + centre) / 3) + (Random.value - 0.5f) * ranMagnitude;
+		} else {
+			assigned[x + l / 2, y + l] = ((tl + tr + centre + up) / 4) + (Random.value - 0.5f) * ranMagnitude;
+		}
+
+		if (right == null) {
+			assigned[x + l, y + l / 2] = ((br + tr + centre) / 3) + (Random.value - 0.5f) * ranMagnitude;
+		} else {
+			assigned[x + l, y + l / 2] = ((br + tr + centre + right) / 4) + (Random.value - 0.5f) * ranMagnitude;
+		}
 
 	}
 
