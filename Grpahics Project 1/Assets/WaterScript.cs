@@ -10,6 +10,7 @@ public class WaterScript : MonoBehaviour {
 	void Start () {
 	}
 
+	// generate mesh for water
 	public void GenerateMesh(Vector3 topLeft, Vector3 topRight, Vector3 bottomLeft, Vector3 bottomRight) {
 		MeshFilter filter = this.gameObject.AddComponent<MeshFilter> ();
 

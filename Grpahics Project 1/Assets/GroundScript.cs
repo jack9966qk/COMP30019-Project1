@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class GroundScript : MonoBehaviour {
 
-	public GameObject camera;
+	public GameObject playerCam;
 	public GameObject waterPlane;
 	public int length = 65;
 	public int height = 200;
@@ -23,7 +23,6 @@ public class GroundScript : MonoBehaviour {
 	public GameObject rightWall;
 	public GameObject topWall;
 
-
 	public Color high = new Color (20, 20, 20);
 	public Color med = new Color (0, 5, 0);
 	public Color low = new Color (5, 5, 5);
@@ -32,8 +31,7 @@ public class GroundScript : MonoBehaviour {
 	void Start () {
 		this.transform.position = centre;
 		float[,] heightMap = new float[length, length];
-		generateHeightmap (heightMap, length, length, randomMagnitude);
-
+		generateHeightmap (heightMap, length, randomMagnitude);
 
 		MeshFilter filter = this.gameObject.AddComponent<MeshFilter> ();
 		filter.mesh = this.CeateMesh (heightMap, length, centre);
@@ -43,6 +41,7 @@ public class GroundScript : MonoBehaviour {
 		setWallPositions (filter.mesh);
 	}
 
+	// helper function to deal with out-of-bound issue
 	float? getValue(float?[,] assigned, int x, int y, int maxWidth, int maxHeight, float alternative) {
 		if (x < 0 || x >= maxWidth || y < 0 || y >= maxHeight) {
 			return alternative;
@@ -52,57 +51,55 @@ public class GroundScript : MonoBehaviour {
 	}
 
 	// performs the diamond and square step on a map (x to x+width-1, y to y+width-1)
-	void performDiamondSquare(float?[,] assigned, int x, int y, int width, int height, float ranMagnitude, int maxWidth, int maxHeight) {
+	void performDiamondSquare(float?[,] assigned, int x, int y, int length, float ranMagnitude, int maxLength) {
 
-		int w = width - 1;
-		int h = height - 1;
+		int l = length - 1;
 		float bl, br, tl, tr;
 		bl = (float) assigned[x, y];
-		br = (float) assigned[x + w, y];
-		tl = (float) assigned[x, y + h];
-		tr = (float) assigned[x + w, y + h];
+		br = (float) assigned[x + l, y];
+		tl = (float) assigned[x, y + l];
+		tr = (float) assigned[x + l, y + l];
 
 		// diamond
 		float centre = ((bl + tr + tl + tr) / 4) + (Random.value - 0.5f) * ranMagnitude;
-		assigned[x + w / 2, y + h / 2] = centre;
+		assigned[x + l / 2, y + l / 2] = centre;
 
 
 		// square
-		float? left = getValue(assigned, x - w / 2, y + h / 2, maxWidth, maxHeight, centre);
-		float? right = getValue(assigned, x + (w / 2) * 3, y + h / 2, maxWidth, maxHeight, centre);
-		float? up = getValue(assigned, x + w / 2, y + (h / 2) * 3, maxWidth, maxHeight, centre);
-		float? down = getValue(assigned, x + w / 2, y - h / 2, maxWidth, maxHeight, centre);
+		float? left = getValue(assigned, x - l / 2, y + l / 2, maxLength, maxLength, centre);
+		float? right = getValue(assigned, x + (l / 2) * 3, y + l / 2, maxLength, maxLength, centre);
+		float? up = getValue(assigned, x + l / 2, y + (l / 2) * 3, maxLength, maxLength, centre);
+		float? down = getValue(assigned, x + l / 2, y - l / 2, maxLength, maxLength, centre);
 
-		assigned[x, y + h / 2] = ((bl + tl + centre + left ?? centre) / 4) + (Random.value - 0.5f) * ranMagnitude;
-		assigned[x + w / 2, y] = ((bl + br + centre + down ?? centre) / 4) + (Random.value - 0.5f) * ranMagnitude;
-		assigned[x + w / 2, y + h] = ((tl + tr + centre + up ?? centre) / 4) + (Random.value - 0.5f) * ranMagnitude;
-		assigned[x + w, y + h / 2] = ((br + tr + centre + right ?? centre) / 4) + (Random.value - 0.5f) * ranMagnitude;
+		assigned[x, y + l / 2] = ((bl + tl + centre + left ?? centre) / 4) + (Random.value - 0.5f) * ranMagnitude;
+		assigned[x + l / 2, y] = ((bl + br + centre + down ?? centre) / 4) + (Random.value - 0.5f) * ranMagnitude;
+		assigned[x + l / 2, y + l] = ((tl + tr + centre + up ?? centre) / 4) + (Random.value - 0.5f) * ranMagnitude;
+		assigned[x + l, y + l / 2] = ((br + tr + centre + right ?? centre) / 4) + (Random.value - 0.5f) * ranMagnitude;
 
 	}
 
 
 
-
 	// generate a heightmap with diamond square on range (x to x+width-1, y to y+width-1)
-	void generateHeightmap(float [,] map, int width, int height, float ranMagnitude) {
+	void generateHeightmap(float [,] map, int length, float ranMagnitude) {
 
-		float?[,] assigned = new float?[width, height];
+		float?[,] assigned = new float?[length, length];
 
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < height; j++) {
+		for (int i = 0; i < length; i++) {
+			for (int j = 0; j < length; j++) {
 				assigned [i, j] = null;
 			}
 		}
 
 		assigned[0, 0] = bottomLeftInit;
-		assigned[width - 1, 0] = bottomRightInit;
-		assigned[0, height - 1] = topLeftInit;
-		assigned[width - 1, height - 1] = topRightInit;
+		assigned[length - 1, 0] = bottomRightInit;
+		assigned[0, length - 1] = topLeftInit;
+		assigned[length - 1, length - 1] = topRightInit;
 
 		
 
-		int wid = width - 1;
-		int hei = height - 1;
+		int wid = length - 1;
+		int hei = length - 1;
 		float ranMag = ranMagnitude;
 
 		int loop = 1;
@@ -110,7 +107,7 @@ public class GroundScript : MonoBehaviour {
 		while (wid >= 2 && hei >= 2) {
 			for (int i = 0; i < loop; i++) {
 				for (int j = 0; j < loop; j++) {
-					performDiamondSquare (assigned, wid * i, hei * j, wid+1, hei+1, ranMag, width, height);
+					performDiamondSquare (assigned, wid * i, hei * j, wid+1, ranMag, length);
 				}
 			}
 
@@ -120,26 +117,27 @@ public class GroundScript : MonoBehaviour {
 			ranMag = ranMag / 2.0f;
 		}
 
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < height; j++) {
+		for (int i = 0; i < length; i++) {
+			for (int j = 0; j < length; j++) {
 				map [i, j] = (float) assigned [i, j];
 			}
 		}
 
 	}
 
-
+	// vertex color based on height
 	Color colorOfHeight(float y, int height) {
 		float factor = (y - centre.y) / height;
-		if (factor > 0.5) {
+		if (factor > 0.5f) {
 			return high;
-		} else if (factor > 0.3) {
+		} else if (factor > 0.35f) {
 			return med;
 		} else {
 			return low;
 		}
 	}
 
+	// create mesh of the ground based on heightmap
 	Mesh CeateMesh(float[,] heightmap, int length, Vector3 centre) {
 		Mesh m = new Mesh ();
 		m.name = "Ground";
@@ -152,7 +150,6 @@ public class GroundScript : MonoBehaviour {
 		List<Vector3> vertices = new List<Vector3>();
 		List<Color> colors = new List<Color> ();
 		List<Vector3> normals = new List<Vector3> ();
-
 
 
 		for (int i = 0; i < length - 1; i++) {
@@ -198,11 +195,13 @@ public class GroundScript : MonoBehaviour {
 
 		m.triangles = triangles;
 
-
 		return m;
 	}
-		
-	void getHeightBound(Mesh m, out float min, out float max) {
+
+
+	// helper function to get bounds of a mesh
+
+	void getYBound(Mesh m, out float ymin, out float ymax) {
 		Vector3[] vertices = m.vertices;
 		float minHeight = vertices [0].y;
 		float maxHeight = vertices [0].y;
@@ -214,10 +213,10 @@ public class GroundScript : MonoBehaviour {
 			}
 		}
 
-		min = minHeight;
-		max = maxHeight;
+		ymin = minHeight;
+		ymax = maxHeight;
 	}
-
+		
 	void getXZBound(Mesh m, out float xmin, out float xmax, out float zmin, out float zmax) {
 		Vector3[] vertices = m.vertices;
 		float minX = vertices [0].x;
@@ -245,9 +244,10 @@ public class GroundScript : MonoBehaviour {
 		zmax = maxZ;
 	}
 
+	// set position of water plane
 	void setWaterPosition(Mesh m) {
 		float ymin, ymax;
-		getHeightBound (m, out ymin, out ymax);
+		getYBound (m, out ymin, out ymax);
 		float height = ymin + (ymax - ymin) / 3;
 
 		float xmin, xmax, zmin, zmax;
@@ -260,15 +260,17 @@ public class GroundScript : MonoBehaviour {
 		waterPlane.gameObject.transform.position = new Vector3 (centre.x, height, centre.z);
 	}
 
+	// set position of camera (player)
 	void setCameraPosition(Mesh m) {
 		float ymin, ymax;
-		getHeightBound (m, out ymin, out ymax);
+		getYBound (m, out ymin, out ymax);
 		float oneThird = ymin + (ymax - ymin) / 3;
 		Vector3[] vertices = m.vertices;
 		Vector3 chosen = vertices[0];
 		float lastHeight = Mathf.Abs(chosen.y - oneThird);
 		float lastDist = Mathf.Pow(chosen.x, 2) + Mathf.Pow(chosen.z, 2) ;
 
+		// put camera in a low to medium height, as close to centre as possible
 		foreach (Vector3 vertex in vertices) {
 			float h = Mathf.Abs (vertex.y - oneThird);
 			float dist = Mathf.Pow(vertex.x, 2)  + Mathf.Pow(vertex.z, 2) ;
@@ -279,16 +281,14 @@ public class GroundScript : MonoBehaviour {
 			}
 		}
 		
-		camera.transform.position = new Vector3(chosen.x, chosen.y + 40f, chosen.z);
-		//Vector3 lookto = new Vector3 (centre.x, height, centre.z);
-//		camera.transform.rotation = Quaternion.LookRotation (lookto-camera.transform.position, Vector3.up);
-		camera.transform.rotation = Quaternion.Euler(Vector3.zero);
+		playerCam.transform.position = new Vector3(chosen.x, chosen.y + 40f, chosen.z);
+		playerCam.transform.rotation = Quaternion.Euler(Vector3.zero);
 	}
 
-
+	// set position of walls
 	void setWallPositions(Mesh m) {
 		float ymin, ymax;
-		getHeightBound (m, out ymin, out ymax);
+		getYBound (m, out ymin, out ymax);
 
 		float xmin, xmax, zmin, zmax;
 		getXZBound (m, out xmin, out xmax, out zmin, out zmax);
@@ -298,7 +298,6 @@ public class GroundScript : MonoBehaviour {
 		this.leftWall.transform.position = new Vector3 (xmax, centre.y, centre.z);
 		this.rightWall.transform.position = new Vector3 (xmin, centre.y, centre.z);
 		this.topWall.transform.position = new Vector3 (centre.x, ymax + 200f, centre.z);
-
 	}
 
 }

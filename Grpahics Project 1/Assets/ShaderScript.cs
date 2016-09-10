@@ -5,6 +5,8 @@ public class ShaderScript : MonoBehaviour
 {
 	public Shader shader;
 	public PointLight pointLight;
+
+	// adjustable parameters 
 	public float alpha = 1f;
 	public float ambient = 1f;
 	public float diffuse = 0.5f;

@@ -121,6 +121,7 @@ Shader "Unlit/PhongShader"
 				// Combine Phong illumination model components
 				float4 returnColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
 				returnColor.rgb = amb.rgb + dif.rgb + spe.rgb;
+				// Apply alpha component
 				returnColor.a = v.color.a * _Alpha;
 				return returnColor;
 			}

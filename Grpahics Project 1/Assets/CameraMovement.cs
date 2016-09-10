@@ -17,7 +17,6 @@ public class CameraMovement : MonoBehaviour {
 	void Update () {
 
 		Vector3 moveDirection = Vector3.zero;
-		Vector3 rotateDirection = Vector3.zero;
 
 		Vector3 forwardVec = transform.forward;
 		Vector3 rightVec = transform.right;
@@ -26,13 +25,11 @@ public class CameraMovement : MonoBehaviour {
 		float mouseX = Input.GetAxis("Mouse X");
 		float mouseY = Input.GetAxis("Mouse Y");
 
-//		rotateDirection += new Vector3(-mouseY * mouseSpeed, mouseX * mouseSpeed, 0);
-		float xRotate = mouseX * mouseSpeed * Time.deltaTime;
-		float yRotate = -mouseY * mouseSpeed * Time.deltaTime;
-		float zRotate = 0f;
+		float yaw = mouseX * mouseSpeed * Time.deltaTime;
+		float pitch = -mouseY * mouseSpeed * Time.deltaTime;
+		float roll = 0f;
 
 		// keyboard control
-
 		if (Input.GetKey(KeyCode.W)) {
 			moveDirection += forwardVec * keyboardSpeed;
 		}
@@ -50,11 +47,11 @@ public class CameraMovement : MonoBehaviour {
 		}
 
 		if (Input.GetKey(KeyCode.Q)) {
-			zRotate += keyboardSpeed * Time.deltaTime;
+			roll += keyboardSpeed * Time.deltaTime;
 		}
 
 		if (Input.GetKey(KeyCode.E)) {
-			zRotate -= keyboardSpeed * Time.deltaTime;
+			roll -= keyboardSpeed * Time.deltaTime;
 		}
 
 
@@ -63,14 +60,18 @@ public class CameraMovement : MonoBehaviour {
 			Debug.Log ("forwardvec " + forwardVec);
 		}
 
-		charController.Move (moveDirection * Time.deltaTime);
+
 		Vector3 rotation = transform.rotation.eulerAngles;
-		transform.rotation = Quaternion.Euler (rotation.x + yRotate, rotation.y + xRotate, rotation.z + zRotate);
-//		transform.eulerAngles = new Vector3 (rotation.x + yRotate, rotation.y + xRotate, rotation.z + zRotate);
-//		transform.rotation *= Quaternion.AngleAxis (xRotate, Vector3.up);
-//		transform.rotation *= Quaternion.AngleAxis (zRotate, Vector3.forward);
-//		transform.rotation *= Quaternion.AngleAxis (yRotate, Vector3.right);
-		//transform.rotation *= Quaternion.Euler (yRotate, xRotate, zRotate);
+
+		// bound x rotation to avoid weird camera control going beyond up/down
+		float newX = rotation.x + pitch;
+		if ( ! ((newX <= 90f) || (newX >= 270f)) ) {
+			newX = rotation.x;
+		} 
+			
+
+		charController.Move (moveDirection * Time.deltaTime);
+		transform.rotation = Quaternion.Euler (newX, rotation.y + yaw, rotation.z + roll);
 	
 	}
 }
