@@ -5,6 +5,10 @@ This is the first project of the subject COMP30019 (Graphics and Interaction) in
 Specification is available [here](./project1_2016_vc.pdf)
 
 
+## Special Note
+
+`unity_ObjectToWorld` and `unity_WorldToObject` are replaced by `_Object2World` and `_World2Object` to support Unity 5.3.6f1. It appears that the change will be reversed automatically in higher Unity version (tested on 5.4.0f3).
+
 ## Usage
 
 Open `Graphics Project 1/Assets/_Scenes/Main.unity` with Unity, either play in the editor or build and run on a platform that supports keyboard and mouse input, there will be a scene containing randomly generated terrain and water, with lighting, camera control and boundaries applied.
